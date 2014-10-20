@@ -12,7 +12,7 @@ library(multtest)
 #To do: Reprocess from raw using GCRMA?
 #To do: Look up probe sequences for PRKACA probes to see what part of the gene/transcripts they actually are designed for
 
-setwd("/Users/ogriffit/Dropbox/WashU/Projects/HCC32/literature/Malouf_Affy_paper/")
+setwd("/Users/ogriffit/Dropbox/WashU/Projects/HCC32/Analysis/E-MTAB-1503/")
 mappingfile="Biomart_U133Plus2_GeneName_mapping.txt"
 #datafile="DNAJB1_PRKACA_expression.txt"
 datafile="CIT_CHEF_EXP_RMA_DATA.txt"
@@ -179,7 +179,7 @@ class_labels[which(class_labels=="HCC" | class_labels=="Normal")]=1
 
 #Then perform differential expression statistics and multiple testing correction for each comparison
 #Note to get non-parametric equivalent of t-test, use robust=TRUE
-MTP_results=MTP(X=expdatafilt_sub, Y=class_labels, na.rm=TRUE, alternative="two.sided", test="t.twosamp.equalvar", typeone="fdr", fdr.method="conservative", B=100, method="sd.minP", robust=TRUE)
+MTP_results=MTP(X=expdatafilt_sub, Y=class_labels, na.rm=TRUE, alternative="two.sided", test="t.twosamp.equalvar", typeone="fdr", fdr.method="conservative", B=1000, method="sd.minP", robust=TRUE)
 
 #Calculate basic summary stats (means, fold change, etc)
 expdatafilt_sub_nonlog2=2^expdatafilt_sub
@@ -187,11 +187,6 @@ class1_means=apply(expdatafilt_sub_nonlog2[,which(class_labels==0)], 1, mean)
 class2_means=apply(expdatafilt_sub_nonlog2[,which(class_labels==1)], 1, mean)
 foldchanges=class1_means/class2_means
 foldchanges[which(foldchanges<1)]=-1/foldchanges[which(foldchanges<1)]
-
-#Output results
-MTP_summary=cbind(mappingdata[rownames(expdatafilt_sub),],class1_means,class2_means,foldchanges,MTP_results@rawp, MTP_results@adjp)
-colnames(MTP_summary)=c(colnames(mappingdata), "mean (pureFL)", "mean (HCC/Normal)", "fold_change","rawp", "adjp")
-write.table(MTP_summary,file="FL_vs_HCC_Norm_MTPresults.txt",sep="\t",row.names=FALSE)
 
 #Calculate correlations between PRKACA and all other genes
 calc_cor_pvalue=function(x,y,method){
@@ -203,5 +198,16 @@ cor_rvalues_202801_at=apply(expdatafiltmat,1,cor,y=expdatafiltmat["202801_at",],
 cor_pvalues_202801_at=apply(expdatafiltmat,1,calc_cor_pvalue,y=expdatafiltmat["202801_at",],method="spearman")
 cor_rvalues_216234_s_at=apply(expdatafiltmat,1,cor,y=expdatafiltmat["216234_s_at",],method="spearman")
 cor_pvalues_216234_s_at=apply(expdatafiltmat,1,calc_cor_pvalue,y=expdatafiltmat["216234_s_at",],method="spearman")
+max_cor_rvalues=apply(cbind(cor_rvalues_202801_at,cor_rvalues_216234_s_at),1,max)
 min_cor_pvalues=apply(cbind(cor_pvalues_202801_at, cor_pvalues_216234_s_at),1,min)
+
+#Apply multtest correction to cor.test values
+
+
+
+#Output results
+MTP_summary=cbind(mappingdata[rownames(expdatafilt_sub),],class1_means,class2_means,foldchanges,MTP_results@rawp, MTP_results@adjp,cor_rvalues_202801_at,cor_pvalues_202801_at,cor_rvalues_216234_s_at,cor_pvalues_216234_s_at,max_cor_rvalues,min_cor_pvalues)
+colnames(MTP_summary)=c(colnames(mappingdata), "mean (pureFL)", "mean (HCC/Normal)", "fold_change","t_rawp", "t_adjp","rho_vs_202801_at","rho_p_vs_202801_at","rho_vs_216234_s_at","rho_p_vs_216234_s_at","max_rho","min_rho_p")
+write.table(MTP_summary,file="FL_vs_HCC_Norm_MTPresults.txt",sep="\t",row.names=FALSE)
+
 

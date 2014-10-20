@@ -1,0 +1,25 @@
+library("gplots")#
+#Transcript-level fpkm data from cufflinks#
+cuffdatafile="/Users/ogriffit/Dropbox/Projects/SU2C/MCF75C/v2/TophatCufflinks/formattedFiles/MCF75C_fpkm.txt"#
+#gene-level data from Alexa-seq#
+alexadatafile="/Users/ogriffit/Dropbox/Projects/SU2C/MCF75C/v2/Alexa/Matrix_GeneExpression_v53.txt"#
+#outfiles#
+outdir="/Users/ogriffit/Dropbox/Projects/SU2C/MCF75C/v2/figures"#
+#heatmap_outfile = "cuff_apoptosis_heatmap.pdf"#
+#heatmap_outfile2 = "alexa_apoptosis_heatmap.pdf"#
+#heatmap_outfile = "cuff_P53signalling_heatmap.pdf"#
+#heatmap_outfile2 = "alexa_P53signalling_heatmap.pdf"#
+#heatmap_outfile = "cuff_apoptosis_heatmap2.pdf"#
+#heatmap_outfile2 = "alexa_apoptosis_heatmap2.pdf"#
+#heatmap_outfile = "cuff_E2up_E2PP2down_heatmap.pdf"#
+#heatmap_outfile2 = "alexa_E2up_E2PP2down_heatmap.pdf"#
+#heatmap_outfile = "cuff_AP1_family_heatmap.pdf"#
+#heatmap_outfile2 = "alexa_AP1_family_heatmap.pdf"#
+heatmap_outfile = "cuff_AP1_family_heatmap_noPP2.pdf"#
+heatmap_outfile2 = "alexa_AP1_family_heatmap_noPP2.pdf"#
+setwd(outdir)
+setwd(outdir)
+outdir="/Users/ogriffit/Dropbox/Projects/SU2C/MCF75C/v2/figures"
+setwd(outdir)
+library("gplots")
+?heatmap.2
