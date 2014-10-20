@@ -179,7 +179,7 @@ class_labels[which(class_labels=="HCC" | class_labels=="Normal")]=1
 
 #Then perform differential expression statistics and multiple testing correction for each comparison
 #Note to get non-parametric equivalent of t-test, use robust=TRUE
-MTP_results=MTP(X=expdatafilt_sub, Y=class_labels, na.rm=TRUE, alternative="two.sided", test="t.twosamp.equalvar", typeone="fdr", fdr.method="conservative", B=1000, method="sd.minP", robust=TRUE)
+MTP_results=MTP(X=expdatafilt_sub, Y=class_labels, na.rm=TRUE, alternative="two.sided", test="t.twosamp.equalvar", typeone="fdr", fdr.method="conservative", B=10000, method="sd.minP", robust=TRUE)
 
 #Calculate basic summary stats (means, fold change, etc)
 expdatafilt_sub_nonlog2=2^expdatafilt_sub
@@ -202,12 +202,25 @@ max_cor_rvalues=apply(cbind(cor_rvalues_202801_at,cor_rvalues_216234_s_at),1,max
 min_cor_pvalues=apply(cbind(cor_pvalues_202801_at, cor_pvalues_216234_s_at),1,min)
 
 #Apply multtest correction to cor.test values
-
-
+pvalues_202801_at=as.numeric(cor_pvalues_202801_at)
+pvalues_adj_202801_at=mt.rawp2adjp(pvalues_202801_at, proc=c("BH"))
+pvalues_adj_orig_order_202801_at=pvalues_adj_202801_at$adjp[order(pvalues_adj_202801_at$index),"BH"]
+pvalues_216234_s_at=as.numeric(cor_pvalues_216234_s_at)
+pvalues_adj_216234_s_at=mt.rawp2adjp(pvalues_216234_s_at, proc=c("BH"))
+pvalues_adj_orig_order_216234_s_at=pvalues_adj_216234_s_at$adjp[order(pvalues_adj_216234_s_at$index),"BH"]
+min_cor_qvalues=apply(cbind(pvalues_adj_orig_order_202801_at, pvalues_adj_orig_order_216234_s_at),1,min)
 
 #Output results
-MTP_summary=cbind(mappingdata[rownames(expdatafilt_sub),],class1_means,class2_means,foldchanges,MTP_results@rawp, MTP_results@adjp,cor_rvalues_202801_at,cor_pvalues_202801_at,cor_rvalues_216234_s_at,cor_pvalues_216234_s_at,max_cor_rvalues,min_cor_pvalues)
-colnames(MTP_summary)=c(colnames(mappingdata), "mean (pureFL)", "mean (HCC/Normal)", "fold_change","t_rawp", "t_adjp","rho_vs_202801_at","rho_p_vs_202801_at","rho_vs_216234_s_at","rho_p_vs_216234_s_at","max_rho","min_rho_p")
+MTP_summary=cbind(mappingdata[rownames(expdatafilt_sub),],class1_means,class2_means,foldchanges,MTP_results@rawp,MTP_results@adjp,cor_rvalues_202801_at,cor_pvalues_202801_at,pvalues_adj_orig_order_202801_at,cor_rvalues_216234_s_at,cor_pvalues_216234_s_at,pvalues_adj_orig_order_216234_s_at,max_cor_rvalues,min_cor_pvalues,min_cor_qvalues)
+colnames(MTP_summary)=c(colnames(mappingdata), "mean (pureFL)", "mean (HCC/Normal)", "fold_change","t_rawp", "t_adjp","rho_vs_202801_at","rho_p_vs_202801_at","rho_q_vs_202801_at","rho_vs_216234_s_at","rho_p_vs_216234_s_at","rho_q_vs_216234_s_at","max_rho","min_rho_p","min_rho_q")
 write.table(MTP_summary,file="FL_vs_HCC_Norm_MTPresults.txt",sep="\t",row.names=FALSE)
 
+#Filter down to just probe sets that meet the following criteria
+#abs(max_rho)>0.5
+#min_rho_q<0.05
+#abs(fold_change)>2
+#t_adjp<0.05
+
+PRKACA_deregulated=MTP_summary[which(abs(MTP_summary[,"max_rho"])>0.5 & MTP_summary[,"min_rho_q"]<0.05 & abs(MTP_summary[,"fold_change"])>2 & MTP_summary[,"t_adjp"]<0.05),]
+PRKACA_upregulated=MTP_summary[which(MTP_summary[,"max_rho"]>0.5 & MTP_summary[,"min_rho_q"]<0.05 & MTP_summary[,"fold_change"]>2 & MTP_summary[,"t_adjp"]<0.05),]
 
