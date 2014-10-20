@@ -224,3 +224,7 @@ write.table(MTP_summary,file="FL_vs_HCC_Norm_MTPresults.txt",sep="\t",row.names=
 PRKACA_deregulated=MTP_summary[which(abs(MTP_summary[,"max_rho"])>0.5 & MTP_summary[,"min_rho_q"]<0.05 & abs(MTP_summary[,"fold_change"])>2 & MTP_summary[,"t_adjp"]<0.05),]
 PRKACA_upregulated=MTP_summary[which(MTP_summary[,"max_rho"]>0.5 & MTP_summary[,"min_rho_q"]<0.05 & MTP_summary[,"fold_change"]>2 & MTP_summary[,"t_adjp"]<0.05),]
 
+#Save these de-regulated gene lists
+write.table(PRKACA_deregulated,file="PRKACA_deregulated.txt",sep="\t",row.names=FALSE)
+write.table(PRKACA_upregulated,file="PRKACA_upregulated,txt",sep="\t",row.names=FALSE)
+
