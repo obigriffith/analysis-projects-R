@@ -226,5 +226,35 @@ PRKACA_upregulated=MTP_summary[which(MTP_summary[,"max_rho"]>0.5 & MTP_summary[,
 
 #Save these de-regulated gene lists
 write.table(PRKACA_deregulated,file="PRKACA_deregulated.txt",sep="\t",row.names=FALSE)
-write.table(PRKACA_upregulated,file="PRKACA_upregulated,txt",sep="\t",row.names=FALSE)
+write.table(PRKACA_upregulated,file="PRKACA_upregulated.txt",sep="\t",row.names=FALSE)
+
+#Create heatmap of just deregulated genes
+#Simplify down to just one probeset per gene (best DE p-value?)
+gene_names=PRKACA_deregulated[,"Associated.Gene.Name"]
+
+
+
+expdatafilt_sub_dr=expdatafilt_sub[rownames(PRKACA_deregulated),]
+
+
+
+
+gene_names=PRKACA_deregulated[,"Associated.Gene.Name"]
+gene_names[which(!gene_names%in%c("PRKACA","ATR","CYP19A1","ERBB2","ISG15","PDGFA"))]=""
+gene_names[which(gene_names=="PRKACA")]="-          PRKACA"
+gene_names[which(gene_names=="ATR")]="- ATR"
+gene_names[which(gene_names=="CYP19A1")]="- CYP19A1"
+gene_names[which(gene_names=="ERBB2")]="- ERBB2"
+gene_names[which(gene_names=="ISG15")]="- ISG15"
+gene_names[which(gene_names=="PDGFA")]="- PDGFA"
+
+diseasecolors_sub=diseasetypes_sub
+diseasecolors_sub[diseasecolors_sub=="pureFL"]=colors[1]
+diseasecolors_sub[diseasecolors_sub=="HCC"]=colors[3]
+diseasecolors_sub[diseasecolors_sub=="Normal"]=colors[4]
+
+pdf(file="DEGeneExpHeatmap.pdf")
+heatmap.2(as.matrix(expdatafilt_sub_dr), hclustfun=myclust, distfun=mydist, na.rm = TRUE, scale="none", dendrogram="both", margins=c(4,10), Rowv=TRUE, Colv=TRUE, symbreaks=FALSE, key=TRUE, symkey=FALSE, density.info="none", trace="none", main="", labCol=samples_sub, labRow=gene_names, ColSideColors=diseasecolors, cexCol=0.8, cexRow=1.2, col=rev(heat.colors(75)))
+legend("topright",legend=c("pureFL","HCC","Normal"),fill=c(colors[1],colors[3],colors[4]), border=FALSE, bty="n", y.intersp = 0.7, cex=0.7)
+dev.off()
 
