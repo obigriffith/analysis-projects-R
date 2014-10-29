@@ -212,8 +212,12 @@ min_cor_qvalues=apply(cbind(pvalues_adj_orig_order_202801_at, pvalues_adj_orig_o
 
 #Output results
 MTP_summary=cbind(mappingdata[rownames(expdatafilt_sub),],class1_means,class2_means,foldchanges,MTP_results@rawp,MTP_results@adjp,cor_rvalues_202801_at,cor_pvalues_202801_at,pvalues_adj_orig_order_202801_at,cor_rvalues_216234_s_at,cor_pvalues_216234_s_at,pvalues_adj_orig_order_216234_s_at,max_cor_rvalues,min_cor_pvalues,min_cor_qvalues)
-colnames(MTP_summary)=c(colnames(mappingdata), "mean (pureFL)", "mean (HCC/Normal)", "fold_change","t_rawp", "t_adjp","rho_vs_202801_at","rho_p_vs_202801_at","rho_q_vs_202801_at","rho_vs_216234_s_at","rho_p_vs_216234_s_at","rho_q_vs_216234_s_at","max_rho","min_rho_p","min_rho_q")
+colnames(MTP_summary)=c(colnames(mappingdata), "mean_pureFL", "mean_HCC_Normal", "fold_change","t_rawp", "t_adjp","rho_vs_202801_at","rho_p_vs_202801_at","rho_q_vs_202801_at","rho_vs_216234_s_at","rho_p_vs_216234_s_at","rho_q_vs_216234_s_at","max_rho","min_rho_p","min_rho_q")
 write.table(MTP_summary,file="FL_vs_HCC_Norm_MTPresults.txt",sep="\t",row.names=FALSE)
+
+#Re-load MTP_summary in case you don't want to repeat 10000 permutations of MTP above (slow!)
+MTP_summary=read.table(file="FL_vs_HCC_Norm_MTPresults_10000.txt",header=TRUE)
+rownames(MTP_summary)=MTP_summary[,"Affy.HG.U133.PLUS.2.probeset"]
 
 #Filter down to just probe sets that meet the following criteria
 #abs(max_rho)>0.5
@@ -229,19 +233,19 @@ write.table(PRKACA_deregulated,file="PRKACA_deregulated.txt",sep="\t",row.names=
 write.table(PRKACA_upregulated,file="PRKACA_upregulated.txt",sep="\t",row.names=FALSE)
 
 #Create heatmap of just deregulated genes
-#Simplify down to just one probeset per gene (best DE p-value?)
-gene_names=PRKACA_deregulated[,"Associated.Gene.Name"]
+#Simplify down to just one probeset per gene (highest fold_change)
+gene_names_unique=unique(PRKACA_deregulated[,"Associated.Gene.Name"])
+getbestprobe=function(gene){
+	data=PRKACA_deregulated[which(PRKACA_deregulated[,"Associated.Gene.Name"]==gene),]
+	bestprobe=data[which(data[,"fold_change"]==max(data[,"fold_change"])),"Affy.HG.U133.PLUS.2.probeset"]
+	return(bestprobe)	
+}
+bestprobes=as.vector(sapply(gene_names_unique,getbestprobe))
+expdatafilt_sub_dr=expdatafilt_sub[bestprobes,]
 
-
-
-expdatafilt_sub_dr=expdatafilt_sub[rownames(PRKACA_deregulated),]
-
-
-
-
-gene_names=PRKACA_deregulated[,"Associated.Gene.Name"]
+gene_names=gene_names_unique
 gene_names[which(!gene_names%in%c("PRKACA","ATR","CYP19A1","ERBB2","ISG15","PDGFA"))]=""
-gene_names[which(gene_names=="PRKACA")]="-          PRKACA"
+gene_names[which(gene_names=="PRKACA")]="-           PRKACA"
 gene_names[which(gene_names=="ATR")]="- ATR"
 gene_names[which(gene_names=="CYP19A1")]="- CYP19A1"
 gene_names[which(gene_names=="ERBB2")]="- ERBB2"
